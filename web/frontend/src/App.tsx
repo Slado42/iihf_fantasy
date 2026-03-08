@@ -17,8 +17,8 @@ function Protected({ children }: { children: ReactNode }) {
 function NavBar() {
   const { user, logout } = useAuth();
   return (
-    <nav className="bg-navy-800 border-b border-navy-700 px-6 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-6">
+    <nav className="bg-navy-800 border-b border-navy-700 px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+      <div className="flex items-center gap-4 flex-wrap">
         <span className="text-gold font-bold text-lg">🏒 IIHF Fantasy</span>
         <Link to="/" className="text-gray-300 hover:text-white text-sm">Dashboard</Link>
         <Link to="/standings" className="text-gray-300 hover:text-white text-sm">Standings</Link>
