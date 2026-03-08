@@ -100,6 +100,25 @@ def save_lineup(
             DailyLineup.day == body.day,
         ).all()
     }
+    # If the saved captain is locked, their captaincy cannot change
+    current_captain = (
+        db.query(DailyLineup)
+        .options(joinedload(DailyLineup.player))
+        .filter(
+            DailyLineup.user_id == current_user.id,
+            DailyLineup.day == body.day,
+            DailyLineup.is_captain == True,
+        )
+        .first()
+    )
+    if current_captain and _is_player_locked(current_captain.player, locked_teams):
+        submitted_as_captain = {lp.player_id for lp in body.players if lp.is_captain}
+        if current_captain.player_id not in submitted_as_captain:
+            raise HTTPException(
+                status_code=422,
+                detail=f"{current_captain.player.name} is locked as captain and cannot be changed",
+            )
+
     for lp in body.players:
         player = player_objects[lp.player_id]
         if _is_player_locked(player, locked_teams) and lp.player_id not in existing_ids:

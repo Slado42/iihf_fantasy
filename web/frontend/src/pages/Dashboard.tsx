@@ -136,6 +136,11 @@ export default function Dashboard() {
 
   const hasAnyPlayer = Object.values(slots).some(Boolean);
 
+  const captainLocked =
+    captainKey !== null &&
+    !!slots[captainKey] &&
+    lockedIds.has(slots[captainKey]!.id);
+
   return (
     <div>
       {toast && (
@@ -180,6 +185,7 @@ export default function Dashboard() {
             player={slots[slot.key]}
             isCaptain={captainKey === slot.key}
             isLocked={slots[slot.key] ? lockedIds.has(slots[slot.key]!.id) : false}
+            captainLocked={captainLocked}
             onPick={() => setPickerSlot(slot)}
             onRemove={() => handleRemove(slot.key)}
             onToggleCaptain={() => handleToggleCaptain(slot.key)}
@@ -195,6 +201,7 @@ export default function Dashboard() {
             player={slots[slot.key]}
             isCaptain={captainKey === slot.key}
             isLocked={slots[slot.key] ? lockedIds.has(slots[slot.key]!.id) : false}
+            captainLocked={captainLocked}
             onPick={() => setPickerSlot(slot)}
             onRemove={() => handleRemove(slot.key)}
             onToggleCaptain={() => handleToggleCaptain(slot.key)}
@@ -209,6 +216,7 @@ export default function Dashboard() {
           player={slots["gk"]}
           isCaptain={captainKey === "gk"}
           isLocked={slots["gk"] ? lockedIds.has(slots["gk"]!.id) : false}
+          captainLocked={captainLocked}
           onPick={() => setPickerSlot(SLOTS[5])}
           onRemove={() => handleRemove("gk")}
           onToggleCaptain={() => handleToggleCaptain("gk")}

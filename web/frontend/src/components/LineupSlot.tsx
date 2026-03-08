@@ -7,12 +7,13 @@ interface Props {
   player: Player | null;
   isCaptain: boolean;
   isLocked: boolean;
+  captainLocked: boolean;
   onPick: () => void;
   onRemove: () => void;
   onToggleCaptain: () => void;
 }
 
-export default function LineupSlot({ position, label, player, isCaptain, isLocked, onPick, onRemove, onToggleCaptain }: Props) {
+export default function LineupSlot({ position, label, player, isCaptain, isLocked, captainLocked, onPick, onRemove, onToggleCaptain }: Props) {
   const posColor: Record<Position, string> = {
     Forward: "text-blue-400",
     Defender: "text-green-400",
@@ -33,6 +34,7 @@ export default function LineupSlot({ position, label, player, isCaptain, isLocke
           player={player}
           isCaptain={isCaptain}
           isLocked={isLocked}
+          captainLocked={captainLocked}
           onRemove={isLocked ? undefined : onRemove}
           onToggleCaptain={onToggleCaptain}
         />

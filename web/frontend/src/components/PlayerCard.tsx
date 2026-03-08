@@ -4,11 +4,12 @@ interface Props {
   player: Player;
   isCaptain?: boolean;
   isLocked?: boolean;
+  captainLocked?: boolean;
   onRemove?: () => void;
   onToggleCaptain?: () => void;
 }
 
-export default function PlayerCard({ player, isCaptain, isLocked, onRemove, onToggleCaptain }: Props) {
+export default function PlayerCard({ player, isCaptain, isLocked, captainLocked, onRemove, onToggleCaptain }: Props) {
   return (
     <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${isCaptain ? "bg-gold/20 border border-gold" : "bg-navy-700"}`}>
       <div className="flex items-center gap-2 min-w-0">
@@ -21,7 +22,7 @@ export default function PlayerCard({ player, isCaptain, isLocked, onRemove, onTo
       <div className="flex items-center gap-1 ml-2 shrink-0">
         <button
           onClick={onToggleCaptain}
-          disabled={isLocked}
+          disabled={isLocked || !!captainLocked}
           title={isCaptain ? "Remove captain" : "Set as captain (2×)"}
           className={`text-sm px-1.5 rounded ${isCaptain ? "text-gold" : "text-gray-500 hover:text-gold"} disabled:opacity-40`}
         >
