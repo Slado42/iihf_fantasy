@@ -91,9 +91,18 @@ def save_lineup(
 
     # Check lock status and player usage limits
     locked_teams = _get_locked_teams_for_day(body.day, db)
+    # Fetch IDs already saved for this user/day — locked players already in the lineup
+    # are allowed to be re-submitted (captain updates, coexisting with changed unlocked slots).
+    existing_ids = {
+        row.player_id
+        for row in db.query(DailyLineup.player_id).filter(
+            DailyLineup.user_id == current_user.id,
+            DailyLineup.day == body.day,
+        ).all()
+    }
     for lp in body.players:
         player = player_objects[lp.player_id]
-        if _is_player_locked(player, locked_teams):
+        if _is_player_locked(player, locked_teams) and lp.player_id not in existing_ids:
             raise HTTPException(
                 status_code=422,
                 detail=f"Player {player.name}'s match has already started and cannot be added",
