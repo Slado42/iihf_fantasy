@@ -26,7 +26,7 @@ export default function MatchCountdown({ match_time, status }: Props) {
       return;
     }
     const update = () => {
-      const ms = new Date(match_time).getTime() - Date.now();
+      const ms = new Date(match_time + 'Z').getTime() - Date.now();
       setDisplay(ms <= 0 ? "🔒 Locked" : formatCountdown(ms));
     };
     update();

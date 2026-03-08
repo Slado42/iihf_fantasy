@@ -100,21 +100,29 @@ def import_matches_to_db():
                 Match.away_team == row["away_team"],
                 Match.day == row["Day"],
             ).first()
-            if not existing:
-                # Parse date and time.
-                # For cross-year tournaments: months Oct–Dec belong to year-1.
-                try:
-                    month_num = datetime.strptime(row["date"].split()[-1], "%b").month
-                    row_year = year - 1 if month_num >= 10 else year
-                    match_dt = datetime.strptime(
-                        f"{row['date']} {row['time']} {row_year}", "%d %b %H:%M %Y"
-                    )
-                    match_dt += timedelta(days=DATE_SHIFT_DAYS)
-                except Exception:
-                    match_dt = datetime.now()
-                # Map IIHF phase to stage: PreliminaryRound → group, else playoff
-                phase = row.get("phase", "PreliminaryRound")
-                stage = "group" if phase == "PreliminaryRound" else "playoff"
+            # Parse date and time.
+            # For cross-year tournaments: months Oct–Dec belong to year-1.
+            try:
+                month_num = datetime.strptime(row["date"].split()[-1], "%b").month
+                row_year = year - 1 if month_num >= 10 else year
+                match_dt = datetime.strptime(
+                    f"{row['date']} {row['time']} {row_year}", "%d %b %H:%M %Y"
+                )
+                match_dt += timedelta(days=DATE_SHIFT_DAYS)
+                # Convert from local machine timezone to UTC so the backend
+                # (which runs in UTC on Render) compares times correctly.
+                local_utc_offset = datetime.now().astimezone().utcoffset()
+                match_dt -= local_utc_offset
+            except Exception:
+                match_dt = datetime.now(timezone.utc).replace(tzinfo=None)
+            # Map IIHF phase to stage: PreliminaryRound → group, else playoff
+            phase = row.get("phase", "PreliminaryRound")
+            stage = "group" if phase == "PreliminaryRound" else "playoff"
+            if existing:
+                # Update match time (re-running the scraper corrects existing UTC offsets)
+                existing.match_time = match_dt
+                existing.date = match_dt.date()
+            else:
                 db.add(Match(
                     day=int(row["Day"]),
                     date=match_dt.date(),

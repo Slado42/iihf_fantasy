@@ -12,7 +12,7 @@ POSITION_LIMITS: Forward=3, Defender=2, Goalkeeper=1
 """
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.models import Player, Match
 
 
@@ -171,7 +171,7 @@ class TestSaveLineup:
         """
         # The locked player uses team_abbr "TST".
         # Insert a match with match_time in the past (status="upcoming" = not completed).
-        past_time = datetime.now() - timedelta(hours=2)
+        past_time = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=2)
         from datetime import date
         match = Match(
             day=1,
