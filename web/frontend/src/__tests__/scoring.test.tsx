@@ -92,6 +92,7 @@ describe("LineupSlot captain indicator", () => {
         player={mockPlayer}
         isCaptain={true}
         isLocked={false}
+        captainLocked={false}
         onPick={() => {}}
         onRemove={() => {}}
         onToggleCaptain={() => {}}
@@ -108,6 +109,7 @@ describe("LineupSlot captain indicator", () => {
         player={mockPlayer}
         isCaptain={false}
         isLocked={false}
+        captainLocked={false}
         onPick={() => {}}
         onRemove={() => {}}
         onToggleCaptain={() => {}}
