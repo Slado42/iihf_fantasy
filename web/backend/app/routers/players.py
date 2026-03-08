@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -24,7 +24,7 @@ def get_players(
 
     locked_teams: set[str] = set()
     if day is not None:
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        now = datetime.now()
         for m in db.query(Match).filter(Match.day == day, Match.match_time <= now).all():
             locked_teams.add(m.home_team)
             locked_teams.add(m.away_team)

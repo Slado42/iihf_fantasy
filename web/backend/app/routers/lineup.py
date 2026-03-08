@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
@@ -15,7 +15,7 @@ POSITION_LIMITS = {"Forward": 3, "Defender": 2, "Goalkeeper": 1}
 
 def _get_locked_teams_for_day(day: int, db: Session) -> set[str]:
     """Return team abbrs whose match on `day` has already started (match_time <= now)."""
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now()
     matches = db.query(Match).filter(Match.day == day, Match.match_time <= now).all()
     locked: set[str] = set()
     for m in matches:

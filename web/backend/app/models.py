@@ -40,7 +40,7 @@ class Match(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     day: Mapped[int] = mapped_column(Integer, nullable=False)
     date: Mapped[date] = mapped_column(Date, nullable=False)
-    match_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)  # UTC
+    match_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)  # naive local time from scraper
     home_team: Mapped[str] = mapped_column(String, nullable=False)
     away_team: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, default="upcoming")  # upcoming/live/completed
