@@ -1,103 +1,81 @@
-import os
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.os_manager import ChromeType
 import pandas as pd
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 from game_winning_goals import extract_gwg
-import tempfile
-from selenium.webdriver.chrome.options import Options
+
 
 def extract_other_stats(url_playbyplay, url_statistics):
-    options = Options()
-    options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")
-    # Required for running Chrome in a headless server environment (e.g. Render)
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    # Prevent sites from detecting headless Chrome via navigator.webdriver
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-    # Allow overriding Chrome binary path via env var (e.g. CHROME_BIN=/usr/bin/chromium-browser)
-    chrome_bin = os.environ.get("CHROME_BIN")
-    if chrome_bin:
-        options.binary_location = chrome_bin
-
-    # Use Chromium driver if CHROME_BIN points to chromium, otherwise standard Chrome
-    chrome_type = ChromeType.CHROMIUM if chrome_bin and "chromium" in chrome_bin else ChromeType.GOOGLE
-    service = Service(ChromeDriverManager(chrome_type=chrome_type).install())
-    driver = webdriver.Chrome(service=service, options=options)
-    wait = WebDriverWait(driver, 15)
-
-    try:
-        # Load the statistics page first and capture its HTML for BeautifulSoup parsing.
-        # This bypasses IP-based 403 blocks that affect plain requests.get() on Render.
-        driver.get(url_statistics)
-        wait.until(EC.presence_of_element_located((By.CLASS_NAME, 's-team--home')))
-        stats_html = driver.page_source
-
-        # Load the play-by-play page for goal event data
-        driver.get(url_playbyplay)
-
-        match_score_home = 0
-        match_score_away = 0
-        df = pd.DataFrame()
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
 
         try:
-            # Wait for timeline events to load
-            wait.until(EC.presence_of_element_located((By.CLASS_NAME, 's-timeline-event.js-timeline-event')))
+            # Load the statistics page and capture its HTML for BeautifulSoup parsing.
+            # Playwright uses its own bundled Chromium — no system Chrome needed.
+            page.goto(url_statistics, timeout=30000)
+            page.wait_for_selector('.s-team--home', timeout=15000)
+            stats_html = page.content()
 
-            # Get all timeline events
-            events = driver.find_elements(By.CLASS_NAME, 's-timeline-event.js-timeline-event')
+            # Load the play-by-play page for goal event data
+            page.goto(url_playbyplay, timeout=30000)
 
-            # Parse game result
-            match_score_home = driver.find_elements(By.CLASS_NAME, 's-team-score')[0].text
-            match_score_away = driver.find_elements(By.CLASS_NAME, 's-team-score')[1].text
+            match_score_home = 0
+            match_score_away = 0
+            df = pd.DataFrame()
 
-            # Parse goal events
-            goal_data = []
-            for event in events:
-                # Extract description cell
-                description = event.find_element(By.CLASS_NAME, 's-cell--description')
+            try:
+                page.wait_for_selector('.s-timeline-event.js-timeline-event', timeout=15000)
 
-                # Get event title
-                title = description.find_element(By.CLASS_NAME, 's-title').text
+                events = page.query_selector_all('.s-timeline-event.js-timeline-event')
 
-                # Check if it's a goal event (has player info)
-                player_elements = description.find_elements(By.CLASS_NAME, 's-player')
-                if player_elements:
-                    # Extract scorer name
-                    scorer = player_elements[0].find_element(By.CLASS_NAME, 's-name').text
-                    goal_data.append({
-                        'Event': title.strip(),
-                        'Player': scorer.strip()
-                    })
+                # Parse game result
+                score_elements = page.query_selector_all('.s-team-score')
+                if len(score_elements) >= 2:
+                    match_score_home = score_elements[0].inner_text().strip()
+                    match_score_away = score_elements[1].inner_text().strip()
 
-            # Create and display DataFrame
-            df = pd.DataFrame(goal_data)
-            # Create Shorthanded and Power Play columns
-            if not df.empty:
-                df = df[df.Event.str.contains('Goal!')]
-                df['Shorthanded Goal'] = df['Event'].str.contains(r'\(SH').astype(int)
-                df['Power Play Goal'] = df['Event'].str.contains(r'\(PP').astype(int)
+                # Parse goal events
+                goal_data = []
+                for event in events:
+                    description = event.query_selector('.s-cell--description')
+                    if not description:
+                        continue
 
-                df = extract_gwg(df) # Extract GWG
-                df['Event'] = df.pop('Event') # Move Event column to the end
-                df = df.groupby('Player').agg({
-                                        'Shorthanded Goal': 'sum',
-                                        'Power Play Goal': 'sum',
-                                        'Game Winning Goal': 'sum',
-                                        'Event': list
-                                        }).reset_index()
-        except Exception as pbp_err:
-            print(f"Warning: play-by-play parsing failed ({pbp_err}), using stats page only")
+                    title_el = description.query_selector('.s-title')
+                    if not title_el:
+                        continue
+                    title = title_el.inner_text()
 
-        return stats_html, df, match_score_home, match_score_away
+                    player_elements = description.query_selector_all('.s-player')
+                    if player_elements:
+                        name_el = player_elements[0].query_selector('.s-name')
+                        if name_el:
+                            scorer = name_el.inner_text()
+                            goal_data.append({
+                                'Event': title.strip(),
+                                'Player': scorer.strip()
+                            })
 
-    finally:
-        # Clean up browser instance
-        driver.quit()
+                df = pd.DataFrame(goal_data)
+                if not df.empty:
+                    df = df[df.Event.str.contains('Goal!')]
+                    df['Shorthanded Goal'] = df['Event'].str.contains(r'\(SH').astype(int)
+                    df['Power Play Goal'] = df['Event'].str.contains(r'\(PP').astype(int)
+
+                    df = extract_gwg(df)
+                    df['Event'] = df.pop('Event')
+                    df = df.groupby('Player').agg({
+                        'Shorthanded Goal': 'sum',
+                        'Power Play Goal': 'sum',
+                        'Game Winning Goal': 'sum',
+                        'Event': list
+                    }).reset_index()
+
+            except PlaywrightTimeout as pbp_err:
+                print(f"Warning: play-by-play page timed out ({pbp_err}), using stats page only")
+            except Exception as pbp_err:
+                print(f"Warning: play-by-play parsing failed ({pbp_err}), using stats page only")
+
+            return stats_html, df, match_score_home, match_score_away
+
+        finally:
+            browser.close()
