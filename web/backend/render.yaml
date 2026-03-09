@@ -2,7 +2,7 @@ services:
   - type: web
     name: iihf-fantasy-backend
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: apt-get install -y chromium-browser && pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
@@ -11,3 +11,5 @@ services:
         sync: false
       - key: CHAMPIONSHIP_URL
         value: https://www.iihf.com/en/events/2026/wm
+      - key: CHROME_BIN
+        value: /usr/bin/chromium-browser

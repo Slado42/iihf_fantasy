@@ -1,9 +1,11 @@
+import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
 import pandas as pd
 from game_winning_goals import extract_gwg
 import tempfile
@@ -12,10 +14,18 @@ from selenium.webdriver.chrome.options import Options
 def extract_other_stats(url_name):
     options = Options()
     options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")
+    # Required for running Chrome in a headless server environment (e.g. Render)
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    # Allow overriding Chrome binary path via env var (e.g. CHROME_BIN=/usr/bin/chromium-browser)
+    chrome_bin = os.environ.get("CHROME_BIN")
+    if chrome_bin:
+        options.binary_location = chrome_bin
 
-    # webdriver-manager automatically downloads the ChromeDriver version
-    # that matches the installed Chrome browser.
-    service = Service(ChromeDriverManager().install())
+    # Use Chromium driver if CHROME_BIN points to chromium, otherwise standard Chrome
+    chrome_type = ChromeType.CHROMIUM if chrome_bin and "chromium" in chrome_bin else ChromeType.GOOGLE
+    service = Service(ChromeDriverManager(chrome_type=chrome_type).install())
     driver = webdriver.Chrome(service=service, options=options)
     wait = WebDriverWait(driver, 15)
 
