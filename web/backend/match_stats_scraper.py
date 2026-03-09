@@ -86,10 +86,16 @@ def extract_all_stats(url_playbyplay, url_statistics):
 
     players_df = pd.concat([players_df, players_away_df], ignore_index=True)
     goalies_df = pd.concat([goalies_df, goalies_away_df], ignore_index=True)
-    players_df = players_df.merge(goalies_df, on='Player', how='left').replace("", 0).fillna(0)
+    players_df = players_df.merge(goalies_df, on='Player', how='left')
+    for col in ['Goals', 'Assists', 'Points', 'Penalty Minutes', 'Plus Minus', 'Goals Against', 'Saves']:
+        if col in players_df.columns:
+            players_df[col] = pd.to_numeric(players_df[col], errors='coerce').fillna(0).astype(int)
 
     if not others_df.empty:
-        fin_df = players_df.merge(others_df, on='Player', how='left').replace("", 0).fillna(0)
+        fin_df = players_df.merge(others_df, on='Player', how='left')
+        for col in ['Shorthanded Goal', 'Power Play Goal', 'Game Winning Goal']:
+            fin_df[col] = fin_df[col].fillna(0).astype(int)
+        fin_df['Event'] = fin_df['Event'].fillna('')
         winners = fin_df[fin_df['Game Winning Goal'] > 0]['Team'].values # Get the team that scored the game-winning goal
         fin_df['Win'] = fin_df['Team'].apply(lambda x: 1 if x in winners else 0) # Create a new column indicating if the player's team won
         fin_df['Event'] = fin_df.pop('Event') # Move Event column to the end
@@ -99,14 +105,13 @@ def extract_all_stats(url_playbyplay, url_statistics):
         fin_df['Power Play Goal'] = 0
         fin_df['Game Winning Goal'] = 0
         fin_df['Win'] = [match_score_home if x == 'home' else match_score_away for x in fin_df['Team']]
-        fin_df['Event'] = 0
+        fin_df['Event'] = ''
 
     # Set all stats for goalies with 0 saves to 0
     goalies_mask = (fin_df['Position'] == 'GK') & (fin_df['Saves'].astype(int) == 0)
     if goalies_mask.any():
-        # Get all columns except the first 3 (Player, Team, Position)
-        stats_columns = fin_df.columns[3:]
-        # Set all stats to 0 for goalies who didn't play (0 saves)
+        # Zero out only numeric stat columns (skip string columns like Event)
+        stats_columns = fin_df.select_dtypes(include='number').columns
         fin_df.loc[goalies_mask, stats_columns] = 0
         print("Reset stats for goalkeepers with 0 saves to 0")
 
