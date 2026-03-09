@@ -3,15 +3,14 @@ os.environ.setdefault('PLAYWRIGHT_BROWSERS_PATH', '/opt/render/project/src')
 
 import pandas as pd
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
-from playwright_stealth import stealth_sync
+from playwright_stealth import Stealth
 from game_winning_goals import extract_gwg
 
 
 def extract_other_stats(url_playbyplay, url_statistics):
-    with sync_playwright() as p:
+    with Stealth().use_sync(sync_playwright()) as p:
         browser = p.chromium.launch(headless=True, args=['--disable-blink-features=AutomationControlled'])
         page = browser.new_page()
-        stealth_sync(page)
 
         try:
             # Load the statistics page and capture its HTML for BeautifulSoup parsing.
