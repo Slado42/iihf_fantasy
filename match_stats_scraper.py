@@ -3,12 +3,14 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from other_stats_scraper_selenium import extract_other_stats
 
-# URL of the IIHF website page you want to scrape
-#url = 'https://www.iihf.com/en/events/2024/wm20/gamecenter/statistics/42153/1-svk-vs-cze'
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                  'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+}
 
 def extract_all_stats(url_playbyplay, url_statistics):
     # Send a GET request to the URL
-    response = requests.get(url_statistics)
+    response = requests.get(url_statistics, headers=HEADERS)
 
     # Check if the request was successful
     if response.status_code == 200:

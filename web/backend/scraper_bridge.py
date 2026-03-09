@@ -168,6 +168,7 @@ def import_match_stats_to_db(match_id: int):
                 .first()
             )
             if not player:
+                print(f"  [scraper] No DB match for player: '{row['Player']}' (team={row.get('Team', '?')})")
                 continue
 
             existing = (
