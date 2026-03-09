@@ -1,3 +1,6 @@
+import os
+os.environ.setdefault('PLAYWRIGHT_BROWSERS_PATH', '/opt/render/project/src')
+
 import asyncio
 import sys
 from pathlib import Path
@@ -78,6 +81,11 @@ async def _auto_score_loop():
 
 @app.on_event("startup")
 async def startup():
+    import subprocess
+    subprocess.run(
+        ['python', '-m', 'playwright', 'install', 'chromium'],
+        capture_output=True, check=False
+    )
     Base.metadata.create_all(bind=engine)
     asyncio.create_task(_auto_score_loop())
 
