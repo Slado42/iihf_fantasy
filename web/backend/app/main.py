@@ -40,9 +40,10 @@ async def _auto_score_loop():
             from scraper_bridge import import_match_stats_to_db
             now = datetime.now(timezone.utc).replace(tzinfo=None)
             cutoff = now - timedelta(hours=5)
+
+            # Phase 1: get unprocessed match IDs in a short-lived session
             db = SessionLocal()
             try:
-                # Step 1: scrape stats for unprocessed matches that started 5+ hours ago
                 unprocessed = (
                     db.query(Match)
                     .filter(
@@ -53,16 +54,21 @@ async def _auto_score_loop():
                     )
                     .all()
                 )
-                for match in unprocessed:
-                    try:
-                        print(f"[auto-score] Scraping stats for match {match.id} (day {match.day})", flush=True)
-                        await asyncio.to_thread(import_match_stats_to_db, match.id)
-                    except Exception as e:
-                        print(f"[auto-score] Failed to scrape match {match.id}: {e}", flush=True)
+                match_ids = [(m.id, m.day) for m in unprocessed]
+            finally:
+                db.close()
 
-                db.expire_all()  # ensure newly committed PlayerStat rows are visible
+            # Phase 2: scrape each match (no DB connection held during Playwright)
+            for match_id, match_day in match_ids:
+                try:
+                    print(f"[auto-score] Scraping stats for match {match_id} (day {match_day})", flush=True)
+                    await asyncio.to_thread(import_match_stats_to_db, match_id)
+                except Exception as e:
+                    print(f"[auto-score] Failed to scrape match {match_id}: {e}", flush=True)
 
-                # Step 2: recalculate scores for all days with matches 5+ hours ago
+            # Phase 3: recalculate scores in a fresh session
+            db = SessionLocal()
+            try:
                 days = {
                     m.day
                     for m in db.query(Match).filter(Match.match_time <= cutoff).all()
@@ -71,9 +77,10 @@ async def _auto_score_loop():
                     scores._calculate_day_scores(day, db)
                     print(f"[auto-score] Recalculated scores for day {day}", flush=True)
             except Exception as e:
-                print(f"[auto-score] Error: {e}", flush=True)
+                print(f"[auto-score] Error in score calculation: {e}", flush=True)
             finally:
                 db.close()
+
         except Exception as e:
             print(f"[auto-score] Unexpected error: {e}", flush=True)
         await asyncio.sleep(3600)  # run every hour
