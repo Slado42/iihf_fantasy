@@ -18,6 +18,10 @@ def extract_other_stats(url_playbyplay, url_statistics):
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    # Prevent sites from detecting headless Chrome via navigator.webdriver
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
     # Allow overriding Chrome binary path via env var (e.g. CHROME_BIN=/usr/bin/chromium-browser)
     chrome_bin = os.environ.get("CHROME_BIN")
     if chrome_bin:
@@ -78,8 +82,8 @@ def extract_other_stats(url_playbyplay, url_statistics):
             # Create Shorthanded and Power Play columns
             if not df.empty:
                 df = df[df.Event.str.contains('Goal!')]
-                df['Shorthanded Goal'] = df['Event'].str.contains('\(SH').astype(int)
-                df['Power Play Goal'] = df['Event'].str.contains('\(PP').astype(int)
+                df['Shorthanded Goal'] = df['Event'].str.contains(r'\(SH').astype(int)
+                df['Power Play Goal'] = df['Event'].str.contains(r'\(PP').astype(int)
 
                 df = extract_gwg(df) # Extract GWG
                 df['Event'] = df.pop('Event') # Move Event column to the end
