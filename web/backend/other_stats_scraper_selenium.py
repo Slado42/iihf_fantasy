@@ -1,3 +1,6 @@
+import os
+os.environ.setdefault('PLAYWRIGHT_BROWSERS_PATH', '/opt/render/project/src')
+
 import pandas as pd
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 from game_winning_goals import extract_gwg
