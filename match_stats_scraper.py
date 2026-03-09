@@ -90,7 +90,12 @@ def extract_all_stats(url_playbyplay, url_statistics):
     players_df = pd.concat([players_df, players_away_df], ignore_index=True)
     goalies_df = pd.concat([goalies_df, goalies_away_df], ignore_index=True)
     players_df = players_df.merge(goalies_df, on='Player', how='left').replace("", 0).fillna(0)
-    others_df, match_score_home, match_score_away = extract_other_stats(url_playbyplay)
+    try:
+        others_df, match_score_home, match_score_away = extract_other_stats(url_playbyplay)
+    except Exception as selenium_err:
+        print(f"Warning: play-by-play scraping failed ({selenium_err}), falling back to stats-page only")
+        others_df = pd.DataFrame()
+        match_score_home, match_score_away = "0", "0"
     if not others_df.empty:
         fin_df = players_df.merge(others_df, on='Player', how='left').replace("", 0).fillna(0)
         winners = fin_df[fin_df['Game Winning Goal'] > 0]['Team'].values # Get the team that scored the game-winning goal
@@ -116,4 +121,5 @@ def extract_all_stats(url_playbyplay, url_statistics):
     print(fin_df)
     return fin_df
 
-extract_all_stats('https://www.iihf.com/en/events/2025/wm/gamecenter/playbyplay/62022/','https://www.iihf.com/en/events/2025/wm/gamecenter/statistics/62022/')
+if __name__ == "__main__":
+    extract_all_stats('https://www.iihf.com/en/events/2025/wm/gamecenter/playbyplay/62022/','https://www.iihf.com/en/events/2025/wm/gamecenter/statistics/62022/')

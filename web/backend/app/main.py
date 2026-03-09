@@ -53,9 +53,11 @@ async def _auto_score_loop():
                 for match in unprocessed:
                     try:
                         print(f"[auto-score] Scraping stats for match {match.id} (day {match.day})", flush=True)
-                        import_match_stats_to_db(match.id)
+                        await asyncio.to_thread(import_match_stats_to_db, match.id)
                     except Exception as e:
                         print(f"[auto-score] Failed to scrape match {match.id}: {e}", flush=True)
+
+                db.expire_all()  # ensure newly committed PlayerStat rows are visible
 
                 # Step 2: recalculate scores for all days with matches 5+ hours ago
                 days = {
