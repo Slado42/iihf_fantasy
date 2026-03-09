@@ -15,7 +15,13 @@ def extract_other_stats(url_playbyplay, url_statistics):
             # Load the statistics page and capture its HTML for BeautifulSoup parsing.
             # Playwright uses its own bundled Chromium — no system Chrome needed.
             page.goto(url_statistics, timeout=30000)
-            page.wait_for_selector('.s-team--home', timeout=15000)
+            try:
+                page.wait_for_selector('.s-team--home', timeout=30000)
+            except PlaywrightTimeout:
+                print(f"Warning: .s-team--home not found on stats page after 30s")
+                print(f"  URL: {page.url}")
+                print(f"  Title: {page.title()}")
+                print(f"  HTML (first 1000): {page.content()[:1000]}")
             stats_html = page.content()
 
             # Load the play-by-play page for goal event data

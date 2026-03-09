@@ -33,6 +33,9 @@ def extract_all_stats(url_playbyplay, url_statistics):
 
     for team in teams:
         team_name_soup = soup.find('div', class_=team)
+        if team_name_soup is None:
+            raise ValueError(f"Stats HTML missing div.{team} — page may not have loaded. "
+                             f"HTML length: {len(str(soup))}")
         players_table_soup = team_name_soup.find_all('div', class_='s-tables')[0]
         players_info_soup = players_table_soup.find_all('tbody', class_='s-table__body')[0]
         player_names_soup = players_info_soup.find_all('td', class_='s-cell--name')
