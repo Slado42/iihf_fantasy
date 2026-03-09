@@ -85,7 +85,7 @@ def extract_all_stats(url_playbyplay, url_statistics):
                     goalies_away_df[stat_name] = stats_list
                 stats_list = []
     else:
-        print(f"Failed to retrieve the webpage. Status code: {response.status_code}")
+        raise RuntimeError(f"Failed to retrieve statistics page (HTTP {response.status_code})")
 
     players_df = pd.concat([players_df, players_away_df], ignore_index=True)
     goalies_df = pd.concat([goalies_df, goalies_away_df], ignore_index=True)
@@ -95,7 +95,7 @@ def extract_all_stats(url_playbyplay, url_statistics):
     except Exception as selenium_err:
         print(f"Warning: play-by-play scraping failed ({selenium_err}), falling back to stats-page only")
         others_df = pd.DataFrame()
-        match_score_home, match_score_away = "0", "0"
+        match_score_home, match_score_away = 0, 0
     if not others_df.empty:
         fin_df = players_df.merge(others_df, on='Player', how='left').replace("", 0).fillna(0)
         winners = fin_df[fin_df['Game Winning Goal'] > 0]['Team'].values # Get the team that scored the game-winning goal

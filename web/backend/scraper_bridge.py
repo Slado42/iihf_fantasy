@@ -157,6 +157,7 @@ def import_match_stats_to_db(match_id: int):
         df = extract_all_stats(match.url_playbyplay, match.url_statistics)
         year = datetime.now().year
 
+        imported_count = 0
         for _, row in df.iterrows():
             player = (
                 db.query(Player)
@@ -201,10 +202,12 @@ def import_match_stats_to_db(match_id: int):
                     goals_against=int(row.get("Goals Against", 0)),
                     win=win,
                 ))
+            imported_count += 1
 
-        match.status = "completed"
+        if imported_count > 0:
+            match.status = "completed"
         db.commit()
-        print(f"Imported stats for match {match_id}")
+        print(f"Imported stats for match {match_id} ({imported_count} player rows)")
     finally:
         db.close()
 
