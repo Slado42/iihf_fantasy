@@ -31,6 +31,7 @@ class PlayerOut(BaseModel):
     team_abbr: str
     championship_year: int
     is_locked: bool = False
+    has_match: bool = True
 
 
 # ── Matches ──────────────────────────────────────────────────────────────────

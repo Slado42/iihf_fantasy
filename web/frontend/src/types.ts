@@ -12,6 +12,7 @@ export interface Player {
   team_abbr: string;
   championship_year: number;
   is_locked?: boolean;
+  has_match?: boolean;
 }
 
 export interface Match {

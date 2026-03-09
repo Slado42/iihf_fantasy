@@ -41,13 +41,13 @@ export default function PlayerPickerModal({ position, alreadySelectedIds, day, o
             placeholder="Search by name…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-navy-900 border border-navy-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-gold"
+            className="flex-1 min-w-0 bg-navy-900 border border-navy-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-gold"
             autoFocus
           />
           <select
             value={teamFilter}
             onChange={(e) => setTeamFilter(e.target.value)}
-            className="bg-navy-900 border border-navy-700 rounded px-2 py-1.5 text-white text-sm focus:outline-none"
+            className="w-28 shrink-0 bg-navy-900 border border-navy-700 rounded px-2 py-1.5 text-white text-sm focus:outline-none"
           >
             <option value="">All teams</option>
             {teams.map((t) => (
@@ -63,7 +63,8 @@ export default function PlayerPickerModal({ position, alreadySelectedIds, day, o
           {filtered.map((player) => {
             const selected = alreadySelectedIds.has(player.id);
             const locked = player.is_locked ?? false;
-            const disabled = selected || locked;
+            const noMatch = !(player.has_match ?? true);
+            const disabled = selected || locked || noMatch;
             return (
               <button
                 key={player.id}
@@ -78,7 +79,8 @@ export default function PlayerPickerModal({ position, alreadySelectedIds, day, o
                 <span className="text-xs font-mono text-gray-400 w-8">{player.team_abbr}</span>
                 <span className="text-sm text-white flex-1">{player.name}</span>
                 {locked && <span className="text-xs text-red-400">🔒 Locked</span>}
-                {selected && !locked && <span className="text-xs text-gray-500">Selected</span>}
+                {noMatch && !locked && <span className="text-xs text-gray-500">No match today</span>}
+                {selected && !locked && !noMatch && <span className="text-xs text-gray-500">Selected</span>}
               </button>
             );
           })}

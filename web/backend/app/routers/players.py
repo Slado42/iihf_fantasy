@@ -23,15 +23,21 @@ def get_players(
         query = query.filter(Player.team_abbr == team)
 
     locked_teams: set[str] = set()
+    playing_teams: set[str] | None = None
     if day is not None:
         now = datetime.now(timezone.utc).replace(tzinfo=None)
-        for m in db.query(Match).filter(Match.day == day, Match.match_time <= now).all():
-            locked_teams.add(m.home_team)
-            locked_teams.add(m.away_team)
+        playing_teams = set()
+        for m in db.query(Match).filter(Match.day == day).all():
+            playing_teams.add(m.home_team)
+            playing_teams.add(m.away_team)
+            if m.match_time <= now:
+                locked_teams.add(m.home_team)
+                locked_teams.add(m.away_team)
 
     result = []
     for p in query.order_by(Player.team_abbr, Player.name).all():
         out = PlayerOut.model_validate(p)
         out.is_locked = p.team_abbr in locked_teams
+        out.has_match = playing_teams is None or p.team_abbr in playing_teams
         result.append(out)
     return result
