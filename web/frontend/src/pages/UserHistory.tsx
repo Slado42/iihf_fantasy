@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getMyScores } from "../api/client";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { getUserScores } from "../api/client";
 import type { PlayerScoreDetail, UserDayScore } from "../types";
 
 function PlayerStatsRow({ player }: { player: PlayerScoreDetail }) {
@@ -47,17 +48,23 @@ function PlayerStatsRow({ player }: { player: PlayerScoreDetail }) {
   );
 }
 
-export default function History() {
+export default function UserHistory() {
+  const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const username: string = location.state?.username ?? "Player";
+
   const [scores, setScores] = useState<UserDayScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [expandedPlayers, setExpandedPlayers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    getMyScores()
+    if (!userId) return;
+    getUserScores(userId)
       .then((res) => setScores(res.data))
       .finally(() => setLoading(false));
-  }, []);
+  }, [userId]);
 
   const toggle = (day: number) => {
     setExpanded((prev) => {
@@ -78,7 +85,13 @@ export default function History() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">My History</h1>
+      <button
+        onClick={() => navigate("/standings")}
+        className="text-gray-400 hover:text-white text-sm mb-4 flex items-center gap-1"
+      >
+        ← Back to Standings
+      </button>
+      <h1 className="text-xl font-bold mb-4">{username}'s History</h1>
       {loading ? (
         <div className="space-y-2">
           {[...Array(3)].map((_, i) => (
@@ -86,7 +99,7 @@ export default function History() {
           ))}
         </div>
       ) : scores.length === 0 ? (
-        <p className="text-gray-400 text-sm">No scores yet. Play your first lineup!</p>
+        <p className="text-gray-400 text-sm">No scores recorded yet.</p>
       ) : (
         <div className="space-y-2">
           {scores.map((ds) => (

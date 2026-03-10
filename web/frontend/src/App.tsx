@@ -5,6 +5,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Standings from "./pages/Standings";
 import History from "./pages/History";
+import UserHistory from "./pages/UserHistory";
 import type { ReactNode } from "react";
 
 function Protected({ children }: { children: ReactNode }) {
@@ -74,6 +75,14 @@ export default function App() {
             element={
               <Protected>
                 <Layout><History /></Layout>
+              </Protected>
+            }
+          />
+          <Route
+            path="/history/:userId"
+            element={
+              <Protected>
+                <Layout><UserHistory /></Layout>
               </Protected>
             }
           />

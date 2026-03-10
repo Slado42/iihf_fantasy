@@ -61,3 +61,6 @@ export const saveLineup = (
 export const getStandings = () => api.get<StandingEntry[]>("/scores/standings");
 
 export const getMyScores = () => api.get<UserDayScore[]>("/scores/me");
+
+export const getUserScores = (userId: string) =>
+  api.get<UserDayScore[]>(`/scores/user/${userId}`);

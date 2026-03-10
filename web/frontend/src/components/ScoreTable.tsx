@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { StandingEntry } from "../types";
 
 interface Props {
@@ -6,6 +7,8 @@ interface Props {
 }
 
 export default function ScoreTable({ standings, currentUserId }: Props) {
+  const navigate = useNavigate();
+
   if (standings.length === 0) {
     return <p className="text-gray-400 text-sm">No standings yet.</p>;
   }
@@ -34,7 +37,14 @@ export default function ScoreTable({ standings, currentUserId }: Props) {
             return (
               <tr
                 key={entry.user_id}
-                className={`border-b border-navy-700/50 ${isMe ? "bg-gold/10" : "hover:bg-navy-800"}`}
+                className={`border-b border-navy-700/50 cursor-pointer ${isMe ? "bg-gold/10" : "hover:bg-navy-800"}`}
+                onClick={() => {
+                  if (isMe) {
+                    navigate("/history");
+                  } else {
+                    navigate("/history/" + entry.user_id, { state: { username: entry.username } });
+                  }
+                }}
               >
                 <td className="py-2 pr-4 text-gray-400">{entry.rank}</td>
                 <td className="py-2 pr-6 font-medium">

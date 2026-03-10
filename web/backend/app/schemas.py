@@ -78,6 +78,16 @@ class PlayerScoreDetail(BaseModel):
     position: str
     is_captain: bool
     fantasy_points: float
+    goals: int | None = None
+    assists: int | None = None
+    ppg: int | None = None
+    shg: int | None = None
+    gwg: int | None = None
+    pim: int | None = None
+    plus_minus: int | None = None
+    saves: int | None = None
+    goals_against: int | None = None
+    win: bool | None = None
 
 class UserDayScoreOut(BaseModel):
     day: int

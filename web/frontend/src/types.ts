@@ -44,6 +44,16 @@ export interface PlayerScoreDetail {
   position: string;
   is_captain: boolean;
   fantasy_points: number;
+  goals: number | null;
+  assists: number | null;
+  ppg: number | null;
+  shg: number | null;
+  gwg: number | null;
+  pim: number | null;
+  plus_minus: number | null;
+  saves: number | null;
+  goals_against: number | null;
+  win: boolean | null;
 }
 
 export interface UserDayScore {

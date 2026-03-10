@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Annotated
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import DailyLineup, PlayerStat, UserDayScore, User, Match
@@ -87,14 +87,11 @@ def get_standings(db: Annotated[Session, Depends(get_db)]):
     return entries
 
 
-@router.get("/me", response_model=list[UserDayScoreOut])
-def get_my_scores(
-    current_user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
+def _build_user_day_scores(user_id: str, db: Session) -> list[UserDayScoreOut]:
+    """Build score history for any user — shared by /me and /user/{user_id}."""
     day_scores = (
         db.query(UserDayScore)
-        .filter(UserDayScore.user_id == current_user.id)
+        .filter(UserDayScore.user_id == user_id)
         .order_by(UserDayScore.day)
         .all()
     )
@@ -102,7 +99,7 @@ def get_my_scores(
     for ds in day_scores:
         lineups = (
             db.query(DailyLineup)
-            .filter(DailyLineup.user_id == current_user.id, DailyLineup.day == ds.day)
+            .filter(DailyLineup.user_id == user_id, DailyLineup.day == ds.day)
             .all()
         )
         match_ids = [
@@ -118,17 +115,42 @@ def get_my_scores(
                 )
                 .first()
             )
-            pts = stat.fantasy_points if stat else 0.0
             player_details.append(PlayerScoreDetail(
                 player_id=entry.player_id,
                 name=entry.player.name,
                 team_abbr=entry.player.team_abbr,
                 position=entry.player.position,
                 is_captain=entry.is_captain,
-                fantasy_points=pts,
+                fantasy_points=stat.fantasy_points if stat else 0.0,
+                goals=stat.goals if stat else None,
+                assists=stat.assists if stat else None,
+                ppg=stat.ppg if stat else None,
+                shg=stat.shg if stat else None,
+                gwg=stat.gwg if stat else None,
+                pim=stat.pim if stat else None,
+                plus_minus=stat.plus_minus if stat else None,
+                saves=stat.saves if stat else None,
+                goals_against=stat.goals_against if stat else None,
+                win=stat.win if stat else None,
             ))
         result.append(UserDayScoreOut(day=ds.day, total_points=ds.total_points, players=player_details))
     return result
+
+
+@router.get("/user/{user_id}", response_model=list[UserDayScoreOut])
+def get_user_scores(user_id: str, db: Annotated[Session, Depends(get_db)]):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return _build_user_day_scores(user_id, db)
+
+
+@router.get("/me", response_model=list[UserDayScoreOut])
+def get_my_scores(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    return _build_user_day_scores(current_user.id, db)
 
 
 @router.get("", response_model=list[StandingEntry])
