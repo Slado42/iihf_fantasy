@@ -42,7 +42,7 @@ function PlayerStatsRow({ player }: { player: PlayerScoreDetail }) {
         <span className="text-xs text-gray-500 italic">No notable stats</span>
       )}
       {player.is_captain && (
-        <span className="text-xs text-gold italic">\u00d72 captain bonus</span>
+        <span className="text-xs text-gold italic">×2 captain bonus</span>
       )}
     </div>
   );
@@ -129,7 +129,7 @@ export default function UserHistory() {
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-400 font-mono w-8">{p.team_abbr}</span>
                             <span>{p.name}</span>
-                            {p.is_captain && <span className="text-gold text-xs">\u2605 CAP</span>}
+                            {p.is_captain && <span className="text-gold text-xs">★ CAP</span>}
                             <span className="text-xs text-gray-500">{p.position}</span>
                           </div>
                           <div className="flex items-center gap-2">
