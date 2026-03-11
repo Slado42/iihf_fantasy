@@ -32,6 +32,8 @@ class PlayerOut(BaseModel):
     championship_year: int
     is_locked: bool = False
     has_match: bool = True
+    picks_used: int = 0
+    picks_limit: int = 3
 
 
 # ── Matches ──────────────────────────────────────────────────────────────────

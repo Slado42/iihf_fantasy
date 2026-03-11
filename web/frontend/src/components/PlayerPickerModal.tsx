@@ -64,7 +64,10 @@ export default function PlayerPickerModal({ position, alreadySelectedIds, day, o
             const selected = alreadySelectedIds.has(player.id);
             const locked = player.is_locked ?? false;
             const noMatch = !(player.has_match ?? true);
-            const disabled = selected || locked || noMatch;
+            const picksUsed = player.picks_used ?? 0;
+            const picksLimit = player.picks_limit ?? 3;
+            const maxedOut = picksUsed >= picksLimit;
+            const disabled = selected || locked || noMatch || maxedOut;
             return (
               <button
                 key={player.id}
@@ -81,6 +84,12 @@ export default function PlayerPickerModal({ position, alreadySelectedIds, day, o
                 {locked && <span className="text-xs text-red-400">🔒 Locked</span>}
                 {noMatch && !locked && <span className="text-xs text-gray-500">No match today</span>}
                 {selected && !locked && !noMatch && <span className="text-xs text-gray-500">Selected</span>}
+                {maxedOut && !selected && !locked && !noMatch && (
+                  <span className="text-xs text-orange-400">Maxed {picksUsed}/{picksLimit}</span>
+                )}
+                {!maxedOut && picksUsed > 0 && !selected && !locked && !noMatch && (
+                  <span className="text-xs text-gray-400">{picksUsed}/{picksLimit}</span>
+                )}
               </button>
             );
           })}

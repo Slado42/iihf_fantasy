@@ -13,6 +13,8 @@ export interface Player {
   championship_year: number;
   is_locked?: boolean;
   has_match?: boolean;
+  picks_used?: number;
+  picks_limit?: number;
 }
 
 export interface Match {
