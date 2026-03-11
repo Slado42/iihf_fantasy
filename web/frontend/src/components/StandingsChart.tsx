@@ -41,7 +41,7 @@ export default function StandingsChart({ standings, currentUserId }: Props) {
   });
 
   return (
-    <div className="bg-navy-800 rounded-xl p-4 mb-6">
+    <div className="bg-navy-800 rounded-xl p-4 mt-6">
       <h2 className="text-sm font-semibold text-gray-400 mb-3">Cumulative Points</h2>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
@@ -56,7 +56,7 @@ export default function StandingsChart({ standings, currentUserId }: Props) {
             contentStyle={{ background: "#0f2744", border: "1px solid #1e3a5f", borderRadius: 8 }}
             labelStyle={{ color: "#9ca3af" }}
             itemStyle={{ color: "#e5e7eb" }}
-            formatter={(v: number) => v.toFixed(1)}
+            formatter={(v) => typeof v === "number" ? v.toFixed(1) : v}
             labelFormatter={(day) => `Day ${day}`}
           />
           <Legend wrapperStyle={{ fontSize: 12, color: "#9ca3af" }} />

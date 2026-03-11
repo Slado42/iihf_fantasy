@@ -27,10 +27,10 @@ export default function Standings() {
         </div>
       ) : (
         <>
-          <StandingsChart standings={standings} currentUserId={user?.id} />
           <div className="bg-navy-800 rounded-xl p-4">
             <ScoreTable standings={standings} currentUserId={user?.id} />
           </div>
+          <StandingsChart standings={standings} currentUserId={user?.id} />
         </>
       )}
     </div>
