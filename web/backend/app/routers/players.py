@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Annotated
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, and_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Player, Match, DailyLineup, User
@@ -42,10 +42,15 @@ def get_players(
             stage = m.stage  # all matches on same day share the same stage
 
         usage_limit = 3 if stage == "group" else 1
+        # Use a subquery to avoid JOIN fan-out (multiple matches per day × lineup entries)
+        stage_days = db.query(Match.day).filter(Match.stage == stage).distinct()
         rows = (
-            db.query(DailyLineup.player_id, func.count(DailyLineup.id).label("cnt"))
-            .join(Match, and_(Match.day == DailyLineup.day, Match.stage == stage))
-            .filter(DailyLineup.user_id == current_user.id, DailyLineup.day != day)
+            db.query(DailyLineup.player_id, func.count(DailyLineup.player_id).label("cnt"))
+            .filter(
+                DailyLineup.user_id == current_user.id,
+                DailyLineup.day != day,
+                DailyLineup.day.in_(stage_days),
+            )
             .group_by(DailyLineup.player_id)
             .all()
         )
