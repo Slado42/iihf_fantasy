@@ -76,7 +76,7 @@ def extract_other_stats(url_playbyplay, url_statistics):
                     df = df.groupby('Player').agg({
                         'Shorthanded Goal': 'sum',
                         'Power Play Goal': 'sum',
-                        'Game Winning Goal': 'sum',
+                        'Game Winning Goal': 'max',  # max not sum — GWG is boolean per player
                         'Event': list
                     }).reset_index()
 
