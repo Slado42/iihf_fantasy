@@ -89,6 +89,7 @@ def get_standings(db: Annotated[Session, Depends(get_db)]):
 
 def _build_user_day_scores(user_id: str, db: Session) -> list[UserDayScoreOut]:
     """Build score history for any user — shared by /me and /user/{user_id}."""
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     day_scores = (
         db.query(UserDayScore)
         .filter(UserDayScore.user_id == user_id)
@@ -102,11 +103,18 @@ def _build_user_day_scores(user_id: str, db: Session) -> list[UserDayScoreOut]:
             .filter(DailyLineup.user_id == user_id, DailyLineup.day == ds.day)
             .all()
         )
-        match_ids = [
-            m.id for m in db.query(Match).filter(Match.day == ds.day).all()
-        ]
+        matches = db.query(Match).filter(Match.day == ds.day).all()
+        match_ids = [m.id for m in matches]
+        started_teams = {
+            team
+            for m in matches
+            if m.match_time <= now
+            for team in (m.home_team, m.away_team)
+        }
         player_details = []
         for entry in lineups:
+            if entry.player.team_abbr not in started_teams:
+                continue
             stat = (
                 db.query(PlayerStat)
                 .filter(
