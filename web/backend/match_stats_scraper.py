@@ -104,7 +104,8 @@ def extract_all_stats(url_playbyplay, url_statistics):
         fin_df['Shorthanded Goal'] = 0
         fin_df['Power Play Goal'] = 0
         fin_df['Game Winning Goal'] = 0
-        fin_df['Win'] = [match_score_home if x == 'home' else match_score_away for x in fin_df['Team']]
+        home_wins = int(match_score_home) > int(match_score_away)
+        fin_df['Win'] = [1 if (x == 'home') == home_wins else 0 for x in fin_df['Team']]
         fin_df['Event'] = ''
 
     # Set all stats for goalies with 0 saves to 0
