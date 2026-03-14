@@ -1,7 +1,7 @@
 /**
  * Tests for the Dashboard page.
  *
- * Dashboard calls getTodaysMatches and getMyLineup on mount.
+ * Dashboard calls getNextMatches and getMyLineup on mount.
  * We mock ../api/client so those calls are controlled.
  *
  * Assertions:
@@ -21,7 +21,7 @@ vi.mock("../api/client", () => ({
   signup: vi.fn(),
   getMe: vi.fn(),
   getPlayers: vi.fn(),
-  getTodaysMatches: vi.fn(),
+  getNextMatches: vi.fn(),
   getMatches: vi.fn(),
   getMyLineup: vi.fn(),
   saveLineup: vi.fn(),
@@ -40,7 +40,7 @@ describe("Dashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    vi.mocked(apiClient.getTodaysMatches).mockResolvedValue({ data: [] } as any);
+    vi.mocked(apiClient.getNextMatches).mockResolvedValue({ data: [] } as any);
     vi.mocked(apiClient.getMyLineup).mockResolvedValue({
       data: { day: 1, lineup: [] },
     } as any);

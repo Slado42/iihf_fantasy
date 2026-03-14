@@ -22,7 +22,7 @@ vi.mock("../api/client", () => ({
   signup: vi.fn(),
   getMe: vi.fn(),
   getPlayers: vi.fn(),
-  getTodaysMatches: vi.fn(),
+  getNextMatches: vi.fn(),
   getMyLineup: vi.fn(),
   saveLineup: vi.fn(),
   getStandings: vi.fn(),
