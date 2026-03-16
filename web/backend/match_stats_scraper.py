@@ -96,8 +96,8 @@ def extract_all_stats(url_playbyplay, url_statistics):
         for col in ['Shorthanded Goal', 'Power Play Goal', 'Game Winning Goal']:
             fin_df[col] = fin_df[col].fillna(0).astype(int)
         fin_df['Event'] = fin_df['Event'].fillna('')
-        winners = fin_df[fin_df['Game Winning Goal'] > 0]['Team'].values # Get the team that scored the game-winning goal
-        fin_df['Win'] = fin_df['Team'].apply(lambda x: 1 if x in winners else 0) # Create a new column indicating if the player's team won
+        home_wins = int(match_score_home) > int(match_score_away)
+        fin_df['Win'] = [1 if (x == 'home') == home_wins else 0 for x in fin_df['Team']]
         fin_df['Event'] = fin_df.pop('Event') # Move Event column to the end
     else:
         fin_df = players_df
