@@ -23,11 +23,14 @@ def extract_gwg(df):
     df['Away Score'] = scores[1].astype(int)
     df['Home Score MAX'] = df['Home Score'].max()
     df['Away Score MAX'] = df['Away Score'].max()
-    # GWG: the unique goal that makes the score exactly one ahead of the opponent's final score.
-    # Home Score is monotonically non-decreasing, so this condition matches exactly once.
+    prev_home = df['Home Score'].shift(1).fillna(0).astype(int)
+    prev_away = df['Away Score'].shift(1).fillna(0).astype(int)
+    # GWG: the goal that pushes the winning team to exactly one ahead of the opponent's final score.
+    # We also check that this team's score actually increased on this event, so that later
+    # events (where the losing team scores while the winner stays at max) are not misidentified.
     df['Game Winning Goal'] = (
-        (df['Home Score'] == df['Away Score MAX'] + 1) |
-        (df['Away Score'] == df['Home Score MAX'] + 1)
+        ((df['Home Score'] > prev_home) & (df['Home Score'] == df['Away Score MAX'] + 1)) |
+        ((df['Away Score'] > prev_away) & (df['Away Score'] == df['Home Score MAX'] + 1))
     ).astype(int)
     df.drop(columns=['Home Score MAX', 'Away Score MAX', 'Home Score', 'Away Score'], inplace=True)
     
