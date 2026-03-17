@@ -17,10 +17,6 @@ export default function MatchCountdown({ match_time, status }: Props) {
   const [display, setDisplay] = useState("");
 
   useEffect(() => {
-    if (status === "completed") {
-      setDisplay("Final");
-      return;
-    }
     if (status === "live") {
       setDisplay("🔴 LIVE");
       return;
